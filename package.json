@@ -1,6 +1,6 @@
 {
-  "name": "emotion-memory",
-  "version": "1.0.0",
+  "name": "emotion-memory-mobile",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,14 +16,7 @@
     "framer-motion": "11.11.17",
     "lucide-react": "0.468.0",
     "recharts": "2.13.3",
-    "html-to-image": "1.11.11"
+    "html2canvas": "1.4.1"
   },
-  "devDependencies": {
-    "tailwindcss": "3.4.17",
-    "postcss": "8.4.49",
-    "autoprefixer": "10.4.20"
-  },
-  "engines": {
-    "node": "20.x"
-  }
+  "devDependencies": {}
 }

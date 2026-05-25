@@ -1,6 +1,6 @@
-# Emotion Memory 情緒記憶集
+# Emotion Memory 手機介面版
 
-## 使用方法
+## 本機預覽
 ```bash
 npm install
 npm run dev
@@ -11,6 +11,15 @@ npm run dev
 npm run build
 ```
 
-可直接部署到 Vercel；GitHub Pages 可使用 `npm run build` 後上載 `dist`。
+## Vercel 部署
+1. 將全部檔案上載到 GitHub repository
+2. Vercel 選擇該 repository
+3. Framework Preset: Vite
+4. Build Command: `npm run build`
+5. Output Directory: `dist`
 
-注意：角色為原創情緒角色，避免使用任何現有電影角色或素材。
+## GitHub Pages
+```bash
+npm run build
+```
+然後部署 `dist` 目錄。

@@ -1,16 +1,207 @@
-import React,{useMemo,useState,useEffect,useRef}from'react';import{createRoot}from'react-dom/client';import{motion,AnimatePresence}from'framer-motion';import{Sparkles,Orbit,Plus,Search,Trash2,Edit3,Share2,CalendarDays,Home,Heart,Briefcase,Coins,Smile,BookOpen,Palette}from'lucide-react';import{PieChart,Pie,Cell,ResponsiveContainer,LineChart,Line,XAxis,YAxis,Tooltip}from'recharts';import*as htmlToImage from'html-to-image';import'./style.css';
-const cats=['家庭','朋友','愛情','事業','金錢','學業','興趣','健康','成長','夢想'];
-const catIcons={家庭:Home,朋友:Smile,愛情:Heart,事業:Briefcase,金錢:Coins,學業:BookOpen,興趣:Palette,健康:Sparkles,成長:Orbit,夢想:Sparkles};
-const emotions=[{key:'joy',zh:'喜',en:'Joy',color:'#ffd84f',grad:'from-amber-200 to-yellow-400',emoji:'✨',shape:'rounded-[42%_58%_48%_52%]',desc:'活潑開朗'},{key:'anger',zh:'怒',en:'Anger',color:'#ff4b4b',grad:'from-red-300 to-orange-500',emoji:'🔥',shape:'rounded-[22%]',desc:'熱血直接'},{key:'sad',zh:'哀',en:'Sadness',color:'#5bb8ff',grad:'from-sky-200 to-blue-500',emoji:'💧',shape:'rounded-[50%_50%_44%_56%]',desc:'安靜柔軟'},{key:'fear',zh:'懼',en:'Fear',color:'#b486ff',grad:'from-violet-300 to-purple-600',emoji:'⚡',shape:'rounded-[48%_52%_38%_62%]',desc:'敏感警覺'},{key:'disgust',zh:'厭惡',en:'Disgust',color:'#63d66e',grad:'from-emerald-200 to-green-500',emoji:'🍃',shape:'rounded-[58%_42%_55%_45%]',desc:'有界線感'}];
-const quotes=['情緒不是麻煩，是正在說話的自己。','每一顆記憶球，都是你走過的證明。','今天的感受，也值得被溫柔收藏。','慢慢來，內心的宇宙會自己發光。'];
-function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
-function today(){return new Date().toISOString().slice(0,10)}
-function useLocal(){const[m,setM]=useState(()=>{try{return JSON.parse(localStorage.getItem('emotion-memory-v1'))||[]}catch{return[]}});useEffect(()=>localStorage.setItem('emotion-memory-v1',JSON.stringify(m)),[m]);return[m,setM]}
-function Avatar({e,big=false}){return <motion.div whileHover={{scale:1.06,y:-6}} animate={{y:[0,-8,0],rotate:[-1,1,-1]}} transition={{duration:3,repeat:Infinity,ease:'easeInOut'}} className={`relative mx-auto ${big?'h-36 w-36':'h-28 w-28'} ${e.shape} bg-gradient-to-br ${e.grad} shadow-2xl flex items-center justify-center overflow-hidden`} style={{boxShadow:`0 0 35px ${e.color}77`}}><div className="absolute inset-0 bg-white/25 blur-xl"/><div className="absolute top-5 left-6 h-5 w-5 rounded-full bg-white/80"/><div className="absolute top-12 flex gap-5"><span className="eye"></span><span className="eye"></span></div><div className="absolute bottom-10 h-2.5 w-10 rounded-full bg-black/35"></div><div className="absolute bottom-3 text-3xl">{e.emoji}</div></motion.div>}
-function Create({setPage,add}){const[selected,setSelected]=useState(null);const[form,setForm]=useState({title:'',body:'',date:today(),intensity:5,categories:[]});function submit(){if(!selected||!form.title.trim())return alert('請輸入記憶標題');add({id:uid(),emotion:selected.key,...form,createdAt:new Date().toISOString()});setForm({title:'',body:'',date:today(),intensity:5,categories:[]});setSelected(null);setPage('vault')}return <main className="min-h-screen pb-28 px-5 pt-8 overflow-hidden"><Bg/><section className="max-w-5xl mx-auto"><div className="glass p-6"><div className="flex items-center gap-3 text-white/85"><Sparkles size={18}/><span>Emotion Memory</span></div><h1 className="text-4xl md:text-6xl font-black text-white mt-4 leading-tight">今天，你留下了什麼情緒？</h1><p className="text-white/70 mt-3 text-lg">每段回憶，都值得被收藏。</p></div><div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">{emotions.map(e=><button key={e.key} onClick={()=>setSelected(e)} className="glass p-4 text-center active:scale-95 transition"><Avatar e={e}/><h3 className="text-white font-bold text-2xl mt-3">{e.zh}</h3><p className="text-white/60 text-sm">{e.desc}</p></button>)}</div></section><AnimatePresence>{selected&&<motion.div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-md flex items-end md:items-center justify-center p-4" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div initial={{y:80,scale:.96}} animate={{y:0,scale:1}} exit={{y:80,scale:.96}} className="glass max-w-xl w-full p-5 rounded-[2rem]"><div className="flex items-center gap-4"><Avatar e={selected}/><div><h2 className="text-3xl font-black text-white">建立「{selected.zh}」記憶</h2><p className="text-white/60">生成一顆屬於你的情緒記憶球</p></div></div><div className="space-y-3 mt-5"><input className="input" placeholder="記憶標題" value={form.title} onChange={ev=>setForm({...form,title:ev.target.value})}/><textarea className="input min-h-28" placeholder="這段記憶發生了什麼？" value={form.body} onChange={ev=>setForm({...form,body:ev.target.value})}/><input type="date" className="input" value={form.date} onChange={ev=>setForm({...form,date:ev.target.value})}/><label className="text-white/80 block">情緒強度：{form.intensity}/10<input type="range" min="1" max="10" value={form.intensity} onChange={ev=>setForm({...form,intensity:+ev.target.value})} className="w-full mt-2"/></label><div className="flex flex-wrap gap-2">{cats.map(c=>{let active=form.categories.includes(c);let Icon=catIcons[c];return <button key={c} onClick={()=>setForm({...form,categories:active?form.categories.filter(x=>x!==c):[...form.categories,c]})} className={`pill ${active?'active':''}`}><Icon size={14}/>{c}</button>})}</div><div className="grid grid-cols-2 gap-3"><button onClick={()=>setSelected(null)} className="btn bg-white/10">取消</button><button onClick={submit} className="btn bg-white text-slate-900">確認收藏</button></div></div></motion.div></motion.div>}</AnimatePresence></main>}
-function Vault({mem,setMem}){const[q,setQ]=useState(''),[ef,setEf]=useState('全部'),[cf,setCf]=useState('全部'),[open,setOpen]=useState(null);const filtered=mem.filter(m=>(ef==='全部'||m.emotion===ef)&&(cf==='全部'||m.categories.includes(cf))&&(`${m.title} ${m.body} ${m.categories.join(' ')}`.toLowerCase().includes(q.toLowerCase())));const stats=emotions.map(e=>({name:e.zh,value:mem.filter(m=>m.emotion===e.key).length,color:e.color}));const avg=mem.length?(mem.reduce((s,m)=>s+m.intensity,0)/mem.length).toFixed(1):0;const line=Object.values(mem.reduce((a,m)=>{a[m.date]=a[m.date]||{date:m.date,強度:0,n:0};a[m.date].強度+=m.intensity;a[m.date].n++;return a},{})).map(x=>({date:x.date.slice(5),強度:Math.round(x.強度/x.n)}));function del(id){setMem(mem.filter(m=>m.id!==id));setOpen(null)}return <main className="min-h-screen pb-28 px-4 pt-6 vault"><Bg dark/><div className="max-w-6xl mx-auto"><div className="glass p-5"><div className="flex items-center justify-between"><div><h1 className="text-white text-3xl font-black">情緒宇宙記憶庫</h1><p className="text-white/60">{mem.length} 顆記憶球 · 平均強度 {avg}</p></div><Orbit className="text-white/80"/></div><div className="mt-4 flex gap-2 overflow-x-auto"><div className="relative min-w-52 flex-1"><Search className="absolute left-3 top-3 text-white/50" size={18}/><input className="input pl-10" placeholder="搜尋記憶、內容、分類" value={q} onChange={e=>setQ(e.target.value)}/></div><select className="input w-28" value={ef} onChange={e=>setEf(e.target.value)}><option>全部</option>{emotions.map(e=><option key={e.key} value={e.key}>{e.zh}</option>)}</select><select className="input w-28" value={cf} onChange={e=>setCf(e.target.value)}><option>全部</option>{cats.map(c=><option key={c}>{c}</option>)}</select></div></div><div className="relative min-h-[420px] my-6 glass overflow-hidden p-5">{filtered.length===0?<div className="text-white/60 text-center mt-32">暫時未有記憶球，去建立第一段情緒記憶吧。</div>:filtered.map((m,i)=>{let e=emotions.find(x=>x.key===m.emotion);return <motion.button key={m.id} onClick={()=>setOpen(m)} className="orb absolute" style={{left:`${8+(i*23)%78}%`,top:`${30+(i*37)%62}%`,width:70+(m.intensity*5),height:70+(m.intensity*5),background:`radial-gradient(circle at 35% 30%, #fff, ${e.color} 28%, ${e.color}99 56%, #1110)` ,boxShadow:`0 0 ${20+m.intensity*5}px ${e.color}`}} animate={{y:[0,-16,0],x:[0,8,0]}} transition={{duration:4+i%4,repeat:Infinity}}><span>{e.zh}</span></motion.button>})}</div><Stats stats={stats} line={line} avg={avg}/></div><AnimatePresence>{open&&<MemoryModal m={open} del={del} close={()=>setOpen(null)}/>}</AnimatePresence></main>}
-function MemoryModal({m,close,del}){const e=emotions.find(x=>x.key===m.emotion),ref=useRef(null);async function share(){try{const dataUrl=await htmlToImage.toPng(ref.current,{pixelRatio:2});const a=document.createElement('a');a.href=dataUrl;a.download='emotion-memory.png';a.click()}catch{alert('未能生成圖片')}}return <motion.div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end md:items-center justify-center p-4" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div ref={ref} initial={{y:80}} animate={{y:0}} exit={{y:80}} className="glass w-full max-w-lg p-6 rounded-[2rem] text-white"><div className="flex justify-between items-start"><div><p className="text-white/60">{m.date} · {e.en}</p><h2 className="text-3xl font-black mt-1">{e.zh}｜{m.title}</h2></div><button onClick={close} className="text-2xl">×</button></div><div className="my-5 flex justify-center"><div className="orb static !w-32 !h-32" style={{background:`radial-gradient(circle at 35% 30%,#fff,${e.color} 30%,${e.color}88 65%)`,boxShadow:`0 0 45px ${e.color}`}}><span>{e.emoji}</span></div></div><p className="leading-8 text-white/85 whitespace-pre-wrap">{m.body||'沒有補充內容。'}</p><div className="flex flex-wrap gap-2 mt-4">{m.categories.map(c=><span className="pill active" key={c}>{c}</span>)}</div><div className="mt-4 text-white/70">情緒強度：{m.intensity}/10</div><div className="grid grid-cols-3 gap-3 mt-5"><button className="btn bg-white/10"><Edit3 size={16}/>編輯</button><button onClick={()=>del(m.id)} className="btn bg-red-500/70"><Trash2 size={16}/>刪除</button><button onClick={share} className="btn bg-white text-slate-900"><Share2 size={16}/>圖片</button></div></motion.div></motion.div>}
-function Stats({stats,line,avg}){const top=stats.slice().sort((a,b)=>b.value-a.value)[0];return <div className="grid md:grid-cols-3 gap-4"><div className="glass p-5 text-white"><p className="text-white/60">每日情緒回顧</p><h3 className="text-2xl font-black mt-2">{quotes[new Date().getDate()%quotes.length]}</h3><div className="mt-5 flex gap-2"><CalendarDays/>最常出現：{top?.value?top.name:'未有資料'}</div></div><div className="glass p-5 h-72"><ResponsiveContainer><PieChart><Pie data={stats.filter(s=>s.value)} dataKey="value" nameKey="name" innerRadius={45} outerRadius={85}>{stats.map((s,i)=><Cell key={i} fill={s.color}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer></div><div className="glass p-5 h-72"><ResponsiveContainer><LineChart data={line}><XAxis dataKey="date" stroke="#ffffff88"/><YAxis stroke="#ffffff88" domain={[1,10]}/><Tooltip/><Line dataKey="強度" stroke="#fff" strokeWidth={3}/></LineChart></ResponsiveContainer></div></div>}
-function Bg(){return <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,#ffe89a,transparent_30%),radial-gradient(circle_at_80%_20%,#b58cff,transparent_28%),linear-gradient(135deg,#111827,#28133d,#07111f)]"><div className="stars"/></div>}
-function App(){const[mem,setMem]=useLocal();const[page,setPage]=useState('create');return <><AnimatePresence mode="wait">{page==='create'?<Create key="c" setPage={setPage} add={m=>setMem([m,...mem])}/>:<Vault key="v" mem={mem} setMem={setMem}/>}</AnimatePresence><nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 glass px-3 py-2 rounded-full flex gap-2"><button onClick={()=>setPage('create')} className={`nav ${page==='create'?'on':''}`}><Plus/>創建</button><button onClick={()=>setPage('vault')} className={`nav ${page==='vault'?'on':''}`}><Orbit/>記憶集</button></nav></>}
-createRoot(document.getElementById('root')).render(<App/>);
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, BookOpen, Search, SlidersHorizontal, X, Trash2, Pencil, Share2, Sparkles, ChevronLeft, CalendarDays, BarChart3, Moon, Sun, Check, RotateCcw } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts'
+import './style.css'
+
+const STORAGE_KEY = 'emotion-memory-v2'
+
+const emotions = [
+  { id: 'joy', name: '喜悅', en: 'Joy', icon: '😊', color: '#FFD84D', glow: 'rgba(255,216,77,.65)', bg: 'linear-gradient(145deg,#ffe46d,#ffad1f)', quote: '快樂不是擁有更多，而是珍惜已在手中的一切。' },
+  { id: 'anger', name: '憤怒', en: 'Anger', icon: '😡', color: '#FF4D4D', glow: 'rgba(255,77,77,.6)', bg: 'linear-gradient(145deg,#ff7a55,#c91f37)', quote: '憤怒有時是在提醒你：有些界線需要被看見。' },
+  { id: 'sadness', name: '悲傷', en: 'Sadness', icon: '😢', color: '#5FA8FF', glow: 'rgba(95,168,255,.6)', bg: 'linear-gradient(145deg,#78c6ff,#2757d8)', quote: '悲傷不是壞事，它讓你知道那件事真的很重要。' },
+  { id: 'fear', name: '恐懼', en: 'Fear', icon: '😨', color: '#B16CFF', glow: 'rgba(177,108,255,.6)', bg: 'linear-gradient(145deg,#d09cff,#6738d8)', quote: '恐懼不是叫你停下來，而是叫你慢一點保護自己。' },
+  { id: 'disgust', name: '厭惡', en: 'Disgust', icon: '🤢', color: '#63D471', glow: 'rgba(99,212,113,.55)', bg: 'linear-gradient(145deg,#94f28d,#179d60)', quote: '厭惡有時是一種直覺：提醒你遠離不適合自己的事。' },
+]
+
+const categories = ['家庭', '朋友', '愛情', '事業', '金錢', '學業', '興趣', '健康', '成長', '夢想']
+const seeds = [
+  { emotion: 'joy', title: '和家人一起吃飯', content: '今天和家人一起坐低食飯，大家聊得很輕鬆，感覺很安心。', categories: ['家庭', '愛情'], intensity: 7 },
+  { emotion: 'sadness', title: '想念一個人', content: '突然想起一些以前的片段，有點鼻酸，但也覺得那段回憶很珍貴。', categories: ['朋友', '成長'], intensity: 6 },
+  { emotion: 'fear', title: '工作壓力有點大', content: '事情太多，怕自己做得不夠好。今晚想早點休息。', categories: ['事業', '健康'], intensity: 8 },
+]
+
+function today() { return new Date().toISOString().slice(0,10) }
+function emotionOf(id) { return emotions.find(e => e.id === id) || emotions[0] }
+function uid() { return `${Date.now()}-${Math.random().toString(16).slice(2)}` }
+
+function loadMemories(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if(raw) return JSON.parse(raw)
+  } catch {}
+  return seeds.map((s, i) => ({ id: uid()+i, date: today(), createdAt: Date.now()-i*86400000, ...s }))
+}
+
+function App(){
+  const [tab,setTab] = useState('create')
+  const [dark,setDark] = useState(true)
+  const [memories,setMemories] = useState(loadMemories)
+  const [selected,setSelected] = useState(null)
+  const [editing,setEditing] = useState(null)
+  const [toast,setToast] = useState('')
+
+  useEffect(()=>localStorage.setItem(STORAGE_KEY, JSON.stringify(memories)),[memories])
+  useEffect(()=>{ if(toast){ const t=setTimeout(()=>setToast(''),2200); return()=>clearTimeout(t)}},[toast])
+
+  const addMemory = (memory) => {
+    setMemories(prev => [{ id: uid(), createdAt: Date.now(), ...memory }, ...prev])
+    setTab('done')
+    setSelected(memory)
+    setToast('記憶已收藏 ✨')
+  }
+  const updateMemory = (id, patch) => {
+    setMemories(prev => prev.map(m => m.id === id ? { ...m, ...patch } : m))
+    setEditing(null)
+    setToast('已更新記憶')
+  }
+  const deleteMemory = (id) => {
+    setMemories(prev => prev.filter(m => m.id !== id))
+    setSelected(null)
+    setToast('已刪除記憶')
+  }
+
+  return <div className={dark ? 'app dark' : 'app light'}>
+    <Stars />
+    <main className="phone-shell">
+      <div className="status"><span>9:41</span><span>●●●  5G  🔋</span></div>
+      <AnimatePresence mode="wait">
+        {tab==='create' && <CreatePage key="create" addMemory={addMemory} dark={dark} setDark={setDark}/>} 
+        {tab==='done' && <DonePage key="done" memory={memories[0]} setTab={setTab}/>} 
+        {tab==='library' && <LibraryPage key="library" memories={memories} setSelected={setSelected}/>} 
+        {tab==='stats' && <StatsPage key="stats" memories={memories}/>} 
+        {tab==='calendar' && <CalendarPage key="calendar" memories={memories} setSelected={setSelected}/>} 
+        {tab==='review' && <ReviewPage key="review" memories={memories}/>} 
+      </AnimatePresence>
+      <BottomNav tab={tab} setTab={setTab}/>
+    </main>
+
+    <AnimatePresence>
+      {selected && <MemoryModal memory={selected} onClose={()=>setSelected(null)} onDelete={deleteMemory} onEdit={()=>{setEditing(selected); setSelected(null)}} />}
+      {editing && <MemoryEditor memory={editing} onClose={()=>setEditing(null)} onSave={(patch)=>updateMemory(editing.id, patch)} />}
+      {toast && <motion.div className="toast" initial={{y:40,opacity:0}} animate={{y:0,opacity:1}} exit={{y:40,opacity:0}}>{toast}</motion.div>}
+    </AnimatePresence>
+  </div>
+}
+
+function Stars(){ return <div className="stars">{Array.from({length:42}).map((_,i)=><i key={i} style={{left:`${Math.random()*100}%`, top:`${Math.random()*100}%`, animationDelay:`${Math.random()*5}s`}} />)}</div> }
+
+function Page({children, className=''}){ return <motion.section className={`page ${className}`} initial={{opacity:0,x:18}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-18}} transition={{duration:.28}}>{children}</motion.section> }
+
+function CreatePage({addMemory,dark,setDark}){
+  const [chosen,setChosen] = useState(null)
+  return <Page className="create-page">
+    <header className="hero-header">
+      <button className="round-btn ghost" onClick={()=>setDark(!dark)}>{dark ? <Sun size={18}/> : <Moon size={18}/>}</button>
+      <div className="chip">情緒記憶核心</div>
+      <h1>今天，<br/>你留下了什麼情緒？</h1>
+      <p>每段回憶，都值得被收藏。</p>
+    </header>
+    <div className="emotion-grid">
+      {emotions.map((e,idx)=><motion.button className="emotion-card" key={e.id} style={{'--c':e.color,'--g':e.glow,'--bg':e.bg}} onClick={()=>setChosen(e)} whileTap={{scale:.94}} initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{delay:idx*.05}}>
+        <span className="character">{e.icon}</span><strong>{e.name}</strong><small>{e.en}</small>
+      </motion.button>)}
+    </div>
+    <DailyQuote />
+    <AnimatePresence>{chosen && <CreateSheet emotion={chosen} onClose={()=>setChosen(null)} onSubmit={addMemory}/>}</AnimatePresence>
+  </Page>
+}
+
+function DailyQuote(){ const e = emotions[new Date().getDate()%emotions.length]; return <div className="quote-card"><Sparkles size={18}/><span>{e.quote}</span></div> }
+
+function CreateSheet({emotion,onClose,onSubmit}){
+  const [title,setTitle] = useState('')
+  const [content,setContent] = useState('')
+  const [date,setDate] = useState(today())
+  const [intensity,setIntensity] = useState(7)
+  const [cats,setCats] = useState([])
+  const toggle = c => setCats(prev => prev.includes(c) ? prev.filter(x=>x!==c) : [...prev,c])
+  const submit = () => {
+    if(!title.trim() && !content.trim()) return
+    onSubmit({emotion:emotion.id,title:title || `${emotion.name}的一天`,content,date,intensity,categories:cats})
+    onClose()
+  }
+  return <motion.div className="sheet-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
+    <motion.div className="create-sheet" style={{'--c':emotion.color,'--bg':emotion.bg}} initial={{y:'100%'}} animate={{y:0}} exit={{y:'100%'}} transition={{type:'spring', damping:24, stiffness:260}}>
+      <div className="sheet-top">
+        <div className="sheet-emotion"><span>{emotion.icon}</span><div><b>{emotion.name}</b><small>{emotion.en}</small></div></div>
+        <button onClick={onClose}><X size={20}/></button>
+      </div>
+      <div className="form-card">
+        <label>記憶標題<input value={title} onChange={e=>setTitle(e.target.value)} placeholder="今天發生了什麼讓你印象深刻的事？" /></label>
+        <label>記憶內容<textarea value={content} onChange={e=>setContent(e.target.value)} placeholder="寫下你的感受與回憶…" /></label>
+        <label>日期<input type="date" value={date} onChange={e=>setDate(e.target.value)} /></label>
+        <label>情緒強度 <span className="range-value">{intensity}/10</span><input type="range" min="1" max="10" value={intensity} onChange={e=>setIntensity(e.target.value)} /></label>
+        <div className="cat-title">分類（可多選）</div>
+        <div className="category-wrap">{categories.map(c=><button key={c} className={cats.includes(c)?'cat active':'cat'} onClick={()=>toggle(c)}>{cats.includes(c)&&<Check size={13}/>} {c}</button>)}</div>
+        <button className="primary-action" onClick={submit}>✨ 保存記憶球</button>
+      </div>
+    </motion.div>
+  </motion.div>
+}
+
+function DonePage({memory,setTab}){ const e=emotionOf(memory?.emotion); return <Page className="done-page">
+  <div className="center-title"><h2>記憶已收藏 ✨</h2><p>你的情緒記憶已經記入宇宙</p></div>
+  <motion.div className="big-orb" style={{'--c':e.color,'--g':e.glow}} initial={{scale:.4,opacity:0}} animate={{scale:1,opacity:1}}><span>{e.icon}</span><b>{memory?.title || '新的記憶'}</b><i>♥</i></motion.div>
+  <button className="primary-action wide" onClick={()=>setTab('library')}>查看記憶集</button>
+  <button className="link-action" onClick={()=>setTab('create')}>繼續記錄</button>
+</Page> }
+
+function LibraryPage({memories,setSelected}){
+  const [q,setQ]=useState(''); const [emotion,setEmotion]=useState('all'); const [filterOpen,setFilterOpen]=useState(false); const [cat,setCat]=useState('全部')
+  const filtered = useMemo(()=> memories.filter(m=>{
+    const hitQ = [m.title,m.content,...(m.categories||[])].join(' ').toLowerCase().includes(q.toLowerCase())
+    const hitE = emotion==='all'||m.emotion===emotion
+    const hitC = cat==='全部'||(m.categories||[]).includes(cat)
+    return hitQ && hitE && hitC
+  }),[memories,q,emotion,cat])
+  return <Page className="library-page">
+    <div className="topbar"><h2>我的情緒宇宙</h2><button onClick={()=>setFilterOpen(true)}><SlidersHorizontal size={19}/></button></div>
+    <div className="searchbox"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜尋標題、內容、分類…" /></div>
+    <div className="filter-row"><button onClick={()=>setEmotion('all')} className={emotion==='all'?'active':''}>全部</button>{emotions.map(e=><button key={e.id} onClick={()=>setEmotion(e.id)} className={emotion===e.id?'active':''}>{e.name}</button>)}</div>
+    <div className="orb-space">
+      {filtered.length===0 && <div className="empty">未有符合的記憶球</div>}
+      {filtered.map((m,i)=><MemoryOrb key={m.id} memory={m} idx={i} onClick={()=>setSelected(m)} />)}
+    </div>
+    <button className="floating-add" onClick={()=>window.dispatchEvent(new CustomEvent('nav-create'))}><Plus size={26}/></button>
+    <AnimatePresence>{filterOpen && <FilterPanel emotion={emotion} setEmotion={setEmotion} cat={cat} setCat={setCat} onClose={()=>setFilterOpen(false)}/>}</AnimatePresence>
+  </Page>
+}
+
+window.addEventListener?.('nav-create',()=>{})
+function MemoryOrb({memory,idx,onClick}){ const e=emotionOf(memory.emotion); const size=[112,88,96,70,132,78][idx%6]; return <motion.button className="memory-orb" onClick={onClick} style={{'--c':e.color,'--g':e.glow,width:size,height:size,left:`${8+(idx*31)%72}%`,top:`${40+(idx*83)%430}px`,animationDelay:`${idx*.45}s`}} whileTap={{scale:.92}}><span>{memory.title}</span><small>{e.icon}</small></motion.button> }
+
+function FilterPanel({emotion,setEmotion,cat,setCat,onClose}){ return <motion.div className="panel-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div className="filter-panel" initial={{y:260}} animate={{y:0}} exit={{y:260}}>
+  <div className="panel-title"><h3>篩選搜尋器</h3><button onClick={onClose}><X size={20}/></button></div>
+  <p>情緒篩選</p><div className="icon-filter"><button className={emotion==='all'?'active':''} onClick={()=>setEmotion('all')}>⌘<span>全部</span></button>{emotions.map(e=><button key={e.id} className={emotion===e.id?'active':''} onClick={()=>setEmotion(e.id)}>{e.icon}<span>{e.name}</span></button>)}</div>
+  <p>分類篩選</p><div className="category-wrap panel-cats"><button className={cat==='全部'?'cat active':'cat'} onClick={()=>setCat('全部')}>全部</button>{categories.map(c=><button key={c} className={cat===c?'cat active':'cat'} onClick={()=>setCat(c)}>{c}</button>)}</div>
+  <div className="panel-actions"><button onClick={()=>{setEmotion('all');setCat('全部')}}>清除</button><button onClick={onClose}>完成</button></div>
+</motion.div></motion.div> }
+
+function MemoryModal({memory,onClose,onDelete,onEdit}){
+  const e=emotionOf(memory.emotion); const cardRef=useRef(null)
+  const share = async()=>{ const html2canvas=(await import('html2canvas')).default; const canvas=await html2canvas(cardRef.current,{backgroundColor:null,scale:2}); const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='emotion-memory.png'; a.click() }
+  return <motion.div className="modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div className="detail-card" ref={cardRef} initial={{scale:.9,y:30}} animate={{scale:1,y:0}} exit={{scale:.9,y:30}}>
+    <button className="close" onClick={onClose}><X size={18}/></button>
+    <div className="detail-orb" style={{'--c':e.color,'--g':e.glow}}><span>{e.icon}</span><b>{memory.title}</b></div>
+    <div className="detail-body"><div className="meta"><b>{e.name}</b><span>{memory.date}</span></div><p>{memory.content || '沒有填寫內容。'}</p><div className="stars-rate">{'★'.repeat(Number(memory.intensity||1))}<span>{memory.intensity}/10</span></div><div className="category-wrap">{(memory.categories||[]).map(c=><span className="cat active" key={c}>{c}</span>)}</div></div>
+    <div className="detail-actions"><button onClick={onEdit}><Pencil size={18}/>編輯</button><button onClick={share}><Share2 size={18}/>分享</button><button className="danger" onClick={()=>onDelete(memory.id)}><Trash2 size={18}/>刪除</button></div>
+  </motion.div></motion.div>
+}
+
+function MemoryEditor({memory,onClose,onSave}){ const [title,setTitle]=useState(memory.title); const [content,setContent]=useState(memory.content); const [intensity,setIntensity]=useState(memory.intensity); return <motion.div className="modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.div className="edit-card" initial={{y:50,opacity:0}} animate={{y:0,opacity:1}} exit={{y:50,opacity:0}}><div className="panel-title"><h3>編輯記憶</h3><button onClick={onClose}><X size={20}/></button></div><label>標題<input value={title} onChange={e=>setTitle(e.target.value)}/></label><label>內容<textarea value={content} onChange={e=>setContent(e.target.value)}/></label><label>情緒強度 {intensity}/10<input type="range" min="1" max="10" value={intensity} onChange={e=>setIntensity(e.target.value)}/></label><button className="primary-action" onClick={()=>onSave({title,content,intensity})}>儲存修改</button></motion.div></motion.div> }
+
+function StatsPage({memories}){ const data=emotions.map(e=>({name:e.name,value:memories.filter(m=>m.emotion===e.id).length,color:e.color})).filter(d=>d.value>0); const avg=memories.length ? (memories.reduce((s,m)=>s+Number(m.intensity||0),0)/memories.length).toFixed(1) : 0; const trend=memories.slice().reverse().map((m,i)=>({i:i+1,score:Number(m.intensity||0)})); return <Page className="stats-page"><div className="topbar"><h2>情緒統計</h2><BarChart3 size={20}/></div><div className="seg"><button>週</button><button className="active">月</button><button>年</button></div><div className="stat-card pie"><ResponsiveContainer width="100%" height={210}><PieChart><Pie data={data} dataKey="value" innerRadius={48} outerRadius={82} paddingAngle={4}>{data.map((d,i)=><Cell key={i} fill={d.color}/>)}</Pie></PieChart></ResponsiveContainer><div className="pie-center"><b>{memories.length}</b><span>記憶</span></div><ul>{data.map(d=><li key={d.name}><i style={{background:d.color}} />{d.name}<span>{d.value}</span></li>)}</ul></div><div className="stat-card"><div className="stat-line"><b>平均強度</b><span>{avg}/10</span></div><ResponsiveContainer width="100%" height={160}><LineChart data={trend}><XAxis dataKey="i" hide/><YAxis hide domain={[0,10]}/><Tooltip/><Line type="monotone" dataKey="score" stroke="#68e7ff" strokeWidth={3} dot={{r:3}} /></LineChart></ResponsiveContainer></div></Page> }
+
+function CalendarPage({memories,setSelected}){ const days=Array.from({length:31},(_,i)=>i+1); return <Page className="calendar-page"><div className="topbar"><h2>情緒日曆</h2><CalendarDays size={20}/></div><h3>2024年5月</h3><div className="calendar-grid">{'日一二三四五六'.split('').map(d=><b key={d}>{d}</b>)}{days.map(d=>{ const m=memories.find(x=>Number(x.date?.slice(-2))===d); return <button key={d} className={m?'has':''} onClick={()=>m&&setSelected(m)}>{d}{m&&<span>{emotionOf(m.emotion).icon}</span>}</button>})}</div><DailyQuote/></Page> }
+
+function ReviewPage({memories}){ const latest=memories[0]; const e=emotionOf(latest?.emotion); return <Page className="review-page"><div className="topbar"><h2>今日回顧</h2><Sparkles size={20}/></div><div className="review-hero" style={{'--c':e.color,'--g':e.glow}}><span>{e.icon}</span><div><small>你的主要情緒</small><b>{e.name}</b><p>情緒強度 {latest?.intensity || 0}/10</p></div></div><div className="quote-card big"><b>今日語錄</b><p>「{e.quote}」</p></div><button className="primary-action wide">分享今天的心情</button></Page> }
+
+function BottomNav({tab,setTab}){
+  useEffect(()=>{ const h=()=>setTab('create'); window.addEventListener('nav-create',h); return()=>window.removeEventListener('nav-create',h)},[setTab])
+  const items=[['create',Plus,'創建'],['library',BookOpen,'記憶集'],['stats',BarChart3,'統計'],['calendar',CalendarDays,'日曆'],['review',Sparkles,'回顧']]
+  return <nav className="bottom-nav">{items.map(([id,Icon,label])=><button key={id} className={tab===id|| (tab==='done'&&id==='library')?'active':''} onClick={()=>setTab(id)}><Icon size={19}/><span>{label}</span></button>)}</nav>
+}
+
+createRoot(document.getElementById('root')).render(<App />)
